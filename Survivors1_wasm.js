@@ -695,7 +695,7 @@ var fileURIPrefix = "file://";
 function isFileURI(filename) {
 	return hasPrefix(filename, fileURIPrefix)
 }
-var wasmBinaryFile = "dmengine.wasm";
+var wasmBinaryFile = "Survivors1";
 if (!isDataURI(wasmBinaryFile)) {
 	wasmBinaryFile = locateFile(wasmBinaryFile)
 }
