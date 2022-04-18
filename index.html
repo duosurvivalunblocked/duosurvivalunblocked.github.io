@@ -1,0 +1,405 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, minimal-ui, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Duo Survival</title>
+	<meta name="description" content="Duo Survival is a 2-player cooperative game by 7Spot Games where you help two apocalypse survivors escape from the zombies through obstacle-filled levels. Join this duo of brave adventurers and enter a post-apocalyptic world full of hungry zombies. Play with a friend and solve exciting puzzles, step on buttons, open doors, activate elevators... and lead the characters to the cure for the virus. This is your last chance: Decide the fate of humanity in Duo Survival!">
+    <style type="text/css">
+      /* Disable user selection to avoid strange bug in Chrome on Windows:
+	* Selecting a text outside the canvas, then clicking+draging would
+	* drag the selected text but block mouse down/up events to the engine.
+	*/
+      body {
+        position: fixed;
+        /* Prevent overscroll */
+        margin: 0;
+        padding: 0;
+      }
+
+      .canvas-app-container {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .canvas-app-container:-webkit-full-screen {
+        /* Auto width and height in Safari/Chrome fullscreen. */
+        width: auto;
+        height: auto;
+      }
+
+      #canvas {
+        outline: none;
+        border: 0;
+        width: 100%;
+        vertical-align: bottom;
+      }
+
+      canvas:focus,
+      canvas:active {
+        outline: none;
+        border: 0;
+        ie-dummy: expression(this.hideFocus=true);
+        -moz-outline-style: none;
+      }
+
+      div {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      .canvas-app-progress {
+        position: absolute;
+        background-color: #d1dbeb;
+        height: 6px;
+        margin-top: -6px;
+        width: 100%;
+      }
+
+      .canvas-app-progress-bar {
+        font-size: 12px;
+        height: 6px;
+        color: rgb(255, 255, 255);
+        background-color: #1a72eb;
+        text-align: center;
+        line-height: 20px;
+      }
+
+      .link,
+      .button {
+        font-family: sans-serif;
+        font-size: 14px;
+        font-weight: normal;
+        font-style: normal;
+        font-stretch: normal;
+        line-height: normal;
+        letter-spacing: 0px;
+        padding-top: 12px;
+      }
+
+      .buttons-background {
+        background-color: #ffffff;
+        width: 100%;
+        height: 42px;
+      }
+
+      body {
+        background-color: #ffffff;
+      }
+
+      .canvas-app-container {
+        background: rgba(250, 252, 255, 1);
+        background: -moz-linear-gradient(-45deg, rgba(250, 252, 255, 1) 0%, rgba(250, 252, 255, 1) 50%, rgba(245, 249, 255, 1) 50%, rgba(245, 249, 255, 1) 100%);
+        background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(250, 252, 255, 1)), color-stop(50%, rgba(250, 252, 255, 1)), color-stop(50%, rgba(245, 249, 255, 1)), color-stop(100%, rgba(245, 249, 255, 1)));
+        background: -webkit-linear-gradient(-45deg, rgba(250, 252, 255, 1) 0%, rgba(250, 252, 255, 1) 50%, rgba(245, 249, 255, 1) 50%, rgba(245, 249, 255, 1) 100%);
+        background: -o-linear-gradient(-45deg, rgba(250, 252, 255, 1) 0%, rgba(250, 252, 255, 1) 50%, rgba(245, 249, 255, 1) 50%, rgba(245, 249, 255, 1) 100%);
+        background: -ms-linear-gradient(-45deg, rgba(250, 252, 255, 1) 0%, rgba(250, 252, 255, 1) 50%, rgba(245, 249, 255, 1) 50%, rgba(245, 249, 255, 1) 100%);
+        background: linear-gradient(135deg, rgba(250, 252, 255, 1) 0%, rgba(250, 252, 255, 1) 50%, rgba(245, 249, 255, 1) 50%, rgba(245, 249, 255, 1) 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fafcff', endColorstr='#f5f9ff', GradientType=1);
+      }
+
+      .canvas-app-canvas {
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: 100%;
+        background-image: url("mainMenu_bg.jpg");
+      }
+    </style>
+
+    <style>
+      .pokiSdkContainer {
+        overflow: hidden;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .pokiSdkContainer.pokiSdkFixed {
+        position: fixed;
+      }
+
+      .pokiSdkContainer.pokiSdkVisible {
+        display: block;
+      }
+
+      .pokiSdkContainer.pokiSdkHidden,
+      .pokiSdkSpinnerContainer.pokiSdkHidden {
+        display: none;
+      }
+
+      .pokiSdkContainer.pokiSdkHidden,
+      .pokiSdkSpinnerContainer {
+        pointer-events: none;
+      }
+
+      .pokiSdkSpinnerContainer {
+        z-index: 10;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('https://a.poki.com/images/thumb_anim_2x.gif') 50% 50% no-repeat;
+        user-select: none;
+      }
+
+      .pokiSdkInsideContainer {
+        background: #000;
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        -webkit-transition: opacity 0.5s ease-in-out;
+        -moz-transition: opacity 0.5s ease-in-out;
+        -ms-transition: opacity 0.5s ease-in-out;
+        -o-transition: opacity 0.5s ease-in-out;
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      .pokiSdkContainer.pokiSdkVisible .pokiSdkInsideContainer {
+        opacity: 1;
+      }
+
+      .pokiSDKAdContainer,
+      .pokiSdkVideoContainer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+      }
+
+      .pokiSdkStartAdButton {
+        position: absolute;
+        z-index: 9999;
+        top: 0;
+        padding-top: 10%;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        color: #FFF;
+        font: 700 15pt 'Arial', sans-serif;
+        font-weight: bold;
+        letter-spacing: 1px;
+        transition: 0.1s ease-in-out;
+        line-height: 1em;
+      }
+
+      .pokiSdkPauseButton {
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 1;
+      }
+
+      .pokiSdkPauseButton:before {
+        content: '';
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        display: block;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        user-select: none;
+        background-color: rgba(0, 0, 0, 0.6);
+        transition: background-color 0.5s ease;
+        animation: 1s linear infinite pulse;
+      }
+
+      .pokiSdkPauseButton:after {
+        content: '';
+        position: absolute;
+        display: block;
+        box-sizing: border-box;
+        border-color: transparent transparent transparent #fff;
+        border-style: solid;
+        border-width: 26px 0 26px 40px;
+        pointer-events: none;
+        animation: 1s linear infinite pulse;
+        left: 6px;
+      }
+
+      .pokiSdkPauseButtonBG {
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: block;
+        content: '';
+        background: rgba(0, 43, 80, 0.5);
+        width: 100%;
+        height: 100%;
+      }
+
+      .pokiSdkPauseButtonBG:hover {
+        background: rgba(0, 43, 80, 0.7);
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        70% {
+          transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        100% {
+          transform: translate(-50%, -50%) scale(0.95);
+        }
+      }
+
+      .pokiSdkProgressContainer {
+        background: #B8C7DD;
+        width: 100%;
+        height: 5px;
+        position: absolute;
+        bottom: 0;
+        z-index: 9999;
+      }
+
+      .pokiSdkProgressBar {
+        position: relative;
+        bottom: 0px;
+        background: #FFDC00;
+        height: 100%;
+        width: 0%;
+        transition: width 0.5s;
+        transition-timing-function: linear;
+      }
+
+      .pokiSdkProgressBar.pokiSdkVisible,
+      .pokiSdkPauseButton.pokiSdkVisible,
+      .pokiSdkStartAdButton.pokiSdkVisible {
+        display: block;
+        pointer-events: auto;
+      }
+
+      .pokiSdkProgressBar.pokiSdkHidden,
+      .pokiSdkPauseButton.pokiSdkHidden,
+      .pokiSdkStartAdButton.pokiSdkHidden {
+        display: none;
+        pointer-events: none;
+      }
+    </style>
+
+    <script type="text/javascript" src="Survivors1_wasm.js"></script>
+  </head>
+  <body>
+    <div id="app-container" class="canvas-app-container" style="margin-left: 0px; margin-top: 0.0562324px; width: 640px; height: 359.888px;">
+      <canvas id="canvas" class="canvas-app-canvas" tabindex="1" width="640" height="359"></canvas>
+      <div class="buttons-background"></div>
+    </div>
+    <script src="poki-sdk.js"></script>
+	<script src="poki-sdk-core-v2.263.0.js" type="text/javascript" crossorigin="anonymous"></script>
+
+    <!-- -->
+    <script id="engine-loader" type="text/javascript" src="dmloader.js"></script>
+    <!-- -->
+    <script id="engine-setup" type="text/javascript">
+      var extra_params = {
+        archive_location_filter: function(path) {
+          return ("archive" + path + "");
+        },
+        engine_arguments: [],
+        custom_heap_size: 134217728,
+        disable_context_menu: true
+      }
+      var isAdBlock = 0;
+      Module['adblockIsEnabled'] = function() {
+        return isAdBlock;
+      };
+      Module['onRuntimeInitialized'] = function() {
+        Module.runApp("canvas", extra_params);
+      };
+      Module["locateFile"] = function(path, scriptDirectory) {
+        // dmengine*.wasm is hardcoded in the built JS loader for WASM,
+        // we need to replace it here with the correct project name.
+        if (path == "dmengine.wasm" || path == "dmengine_release.wasm" || path == "dmengine_headless.wasm") {
+          path = "Survivors1.wasm";
+        }
+        return scriptDirectory + path;
+      };
+      var is_iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      var buttonHeight = 0;
+      // Resize on init, screen resize and orientation change
+      function resize_game_canvas() {
+        // Hack for iOS when exit from Fullscreen mode
+        if (is_iOS) {
+          window.scrollTo(0, 0);
+        }
+        var app_container = document.getElementById('app-container');
+        var game_canvas = document.getElementById('canvas');
+        var innerWidth = window.innerWidth;
+        var innerHeight = window.innerHeight - buttonHeight;
+        var width = 1067;
+        var height = 600;
+        var targetRatio = width / height;
+        var actualRatio = innerWidth / innerHeight;
+        //Downscale fit
+        if (innerWidth < width || innerHeight < height) {
+          if (actualRatio > targetRatio) {
+            width = innerHeight * targetRatio;
+            height = innerHeight;
+            app_container.style.marginLeft = ((innerWidth - width) / 2) + "px";
+            app_container.style.marginTop = "0px";
+          } else {
+            width = innerWidth;
+            height = innerWidth / targetRatio;
+            app_container.style.marginLeft = "0px";
+            app_container.style.marginTop = ((innerHeight - height) / 2) + "px";
+          }
+        } else {
+          app_container.style.marginLeft = ((innerWidth - width) / 2) + "px";
+          app_container.style.marginTop = ((innerHeight - height) / 2) + "px";
+        }
+        app_container.style.width = width + "px";
+        app_container.style.height = height + buttonHeight + "px";
+        game_canvas.width = width;
+        game_canvas.height = height;
+      }
+      resize_game_canvas();
+      window.addEventListener('resize', resize_game_canvas, false);
+      window.addEventListener('orientationchange', resize_game_canvas, false);
+
+      function load_engine() {
+        PokiSDK.gameLoadingStart();
+        var engineJS = document.createElement('script');
+        engineJS.type = 'text/javascript';
+        if (Module['isWASMSupported']) {
+          engineJS.src = 'Survivors1_wasm.js';
+        } else {
+          engineJS.src = 'Survivors1_asmjs.js';
+        }
+        document.head.appendChild(engineJS);
+      }
+    </script>
+    <script id="engine-start" type="text/javascript">
+      PokiSDK.init().then(load_engine).catch(() => {
+        isAdBlock = 1;
+        load_engine();
+        console.log("ADBlock is enabled");
+      });
+      PokiSDK.setDebug(false);
+    </script>
+    <script type="text/javascript" src="GameAnalytics.js"></script>
+  </body>
+</html>
